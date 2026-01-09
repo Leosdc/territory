@@ -55,10 +55,11 @@ interface Player {
 
 const TerritoryGame = () => {
     const [gameState, setGameState] = useState<'menu' | 'playing' | 'ended'>('menu');
-    const [gridSize, setGridSize] = useState(64);
+    const [gridSize, setGridSize] = useState(32);
     const [numNPCs, setNumNPCs] = useState(1);
     const [gameDuration] = useState(60);
     const [playerColor, setPlayerColor] = useState(COLORS[1]);
+    const [playerName] = useState('YOU');
     const [timeLeft, setTimeLeft] = useState(60);
 
     const [grid, setGrid] = useState<(string | null)[][]>([]);
@@ -344,19 +345,86 @@ const TerritoryGame = () => {
         npc.changeDirectionTimer--;
 
         if (npc.changeDirectionTimer <= 0) {
-            const options = [{ vx: 1, vy: 0 }, { vx: -1, vy: 0 }, { vx: 0, vy: 1 }, { vx: 0, vy: -1 }];
-            const validOptions = options.filter(dir => {
-                const newX = npc.x + dir.vx;
-                const newY = npc.y + dir.vy;
-                return newX >= 0.5 && newX < cols - 0.5 && newY >= 0.5 && newY < rows - 0.5;
-            });
+            // Smart AI: Seek nearest power-up (70% chance)
+            if (powerUps.length > 0 && Math.random() > 0.3) {
+                const nearest = powerUps.reduce((closest, pu) => {
+                    const dist = Math.sqrt((npc.x - pu.x) ** 2 + (npc.y - pu.y) ** 2);
+                    const closestDist = Math.sqrt((npc.x - closest.x) ** 2 + (npc.y - closest.y) ** 2);
+                    return dist < closestDist ? pu : closest;
+                });
 
-            if (validOptions.length > 0) {
-                const chosen = validOptions[Math.floor(Math.random() * validOptions.length)];
-                npc.vx = chosen.vx;
-                npc.vy = chosen.vy;
+                // Move towards power-up (diagonal movement)
+                const dx = nearest.x - npc.x;
+                const dy = nearest.y - npc.y;
+
+                npc.vx = dx > 0.5 ? 1 : dx < -0.5 ? -1 : 0;
+                npc.vy = dy > 0.5 ? 1 : dy < -0.5 ? -1 : 0;
+                npc.changeDirectionTimer = 10; // Quick re-evaluation for power-ups
+            } else {
+                // Strategic movement: Try to form rectangles/enclosed areas
+                const currentCell = grid[Math.floor(npc.y)]?.[Math.floor(npc.x)];
+                const isOnMyTerritory = currentCell === npc.color;
+
+                // If on own territory, try to expand outward in a consistent direction
+                if (isOnMyTerritory) {
+                    // Continue in same direction to form lines/rectangles
+                    if (npc.vx !== 0 || npc.vy !== 0) {
+                        const nextX = Math.floor(npc.x + npc.vx);
+                        const nextY = Math.floor(npc.y + npc.vy);
+                        const nextCell = grid[nextY]?.[nextX];
+
+                        // Keep going if next cell is empty or enemy territory
+                        if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows &&
+                            (nextCell === null || nextCell !== npc.color)) {
+                            // Continue in same direction
+                            npc.changeDirectionTimer = 30 + Math.random() * 20; // Longer straight lines
+                            return;
+                        }
+                    }
+
+                    // Turn 90 degrees to form rectangle
+                    if (Math.random() > 0.5) {
+                        const temp = npc.vx;
+                        npc.vx = npc.vy;
+                        npc.vy = temp;
+                    } else {
+                        const temp = npc.vx;
+                        npc.vx = -npc.vy;
+                        npc.vy = -temp;
+                    }
+                } else {
+                    // Not on own territory - move with purpose (diagonal allowed)
+                    const options = [
+                        { vx: 1, vy: 0 }, { vx: -1, vy: 0 }, { vx: 0, vy: 1 }, { vx: 0, vy: -1 },
+                        { vx: 1, vy: 1 }, { vx: 1, vy: -1 }, { vx: -1, vy: 1 }, { vx: -1, vy: -1 }
+                    ];
+
+                    // Prefer directions that lead to empty space or back to own territory
+                    const scoredOptions = options.map(dir => {
+                        const newX = Math.floor(npc.x + dir.vx * 3);
+                        const newY = Math.floor(npc.y + dir.vy * 3);
+                        if (newX < 0 || newX >= cols || newY < 0 || newY >= rows) return { ...dir, score: -100 };
+
+                        const targetCell = grid[newY]?.[newX];
+                        let score = 0;
+                        if (targetCell === null) score = 10; // Empty space is good
+                        if (targetCell === npc.color) score = 5; // Own territory is ok
+                        if (targetCell && targetCell !== npc.color) score = -5; // Enemy territory is bad
+
+                        return { ...dir, score };
+                    });
+
+                    scoredOptions.sort((a, b) => b.score - a.score);
+                    const best = scoredOptions[0];
+
+                    if (best.score > -100) {
+                        npc.vx = best.vx;
+                        npc.vy = best.vy;
+                    }
+                }
+
+                npc.changeDirectionTimer = 25 + Math.random() * 25;
             }
-            npc.changeDirectionTimer = 20 + Math.random() * 50;
         }
     };
 
@@ -493,9 +561,8 @@ const TerritoryGame = () => {
                     const gridX = Math.floor(p.x);
                     const gridY = Math.floor(p.y);
                     if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
-                        if (newGrid[gridY][gridX] !== p.color) {
-                            newGrid[gridY][gridX] = p.color;
-                        }
+                        // ALWAYS paint where you walk, even if it's already captured
+                        newGrid[gridY][gridX] = p.color;
                     }
                 }
             });
@@ -656,27 +723,35 @@ const TerritoryGame = () => {
                 }
             }
 
-            // Draw PowerUps
-            ctx.font = `${VISUAL_CELL_SIZE * 0.8}px serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            // Draw PowerUps with Lucide-style icons
             powerUps.forEach(pu => {
                 const px = pu.x * VISUAL_CELL_SIZE;
-                const py = pu.y * VISUAL_CELL_SIZE; // x,y are centers? No, x,y are floats 0.5 offset
+                const py = pu.y * VISUAL_CELL_SIZE;
 
-                // Draw glowing background for item
-                ctx.fillStyle = '#ffffff33';
+                // Draw glowing background
+                ctx.fillStyle = '#ffffff22';
                 ctx.beginPath();
-                ctx.arc(px, py, VISUAL_CELL_SIZE / 2, 0, Math.PI * 2);
+                ctx.arc(px, py, VISUAL_CELL_SIZE * 0.45, 0, Math.PI * 2);
                 ctx.fill();
 
-                let icon = '❓';
-                if (pu.type === 'SWAP') icon = '🔄';
-                if (pu.type === 'SPEED') icon = '⚡';
-                if (pu.type === 'FREEZE') icon = '❄️';
-                if (pu.type === 'BOMB') icon = '💣';
+                // Draw icon background
+                ctx.fillStyle = pu.type === 'SWAP' ? '#00FFFF' :
+                    pu.type === 'SPEED' ? '#FFCC00' :
+                        pu.type === 'FREEZE' ? '#00FF99' : '#FF0055';
+                ctx.beginPath();
+                ctx.arc(px, py, VISUAL_CELL_SIZE * 0.35, 0, Math.PI * 2);
+                ctx.fill();
 
-                ctx.fillText(icon, px, py + 2);
+                // Draw icon symbol
+                ctx.fillStyle = '#000';
+                ctx.font = `bold ${VISUAL_CELL_SIZE * 0.5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                const symbol = pu.type === 'SWAP' ? '⇄' :
+                    pu.type === 'SPEED' ? '⚡' :
+                        pu.type === 'FREEZE' ? '❄' : '💥';
+                ctx.fillText(symbol, px, py + 2);
             });
 
             // Draw Players
@@ -744,6 +819,15 @@ const TerritoryGame = () => {
                     <div>
                         <label className="text-xs font-bold text-gray-500 uppercase ml-1">Map Size</label>
                         <div className="grid grid-cols-3 gap-2 mt-1">
+                            {[8, 16, 32].map(s => (
+                                <button key={s} onClick={() => setGridSize(s)}
+                                    className={`py-3 rounded-xl font-mono text-sm font-bold border transition-all
+                         ${gridSize === s ? 'bg-neon-purple border-neon-purple text-white' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600'}`}>
+                                    {s}x{s}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-2">
                             {[64, 128, 256].map(s => (
                                 <button key={s} onClick={() => setGridSize(s)}
                                     className={`py-3 rounded-xl font-mono text-sm font-bold border transition-all
@@ -829,15 +913,20 @@ const TerritoryGame = () => {
             <Crown size={64} className="mx-auto mb-6 text-neon-yellow animate-bounce" />
             <h2 className="text-4xl font-black text-white mb-2">GAME OVER</h2>
             <div className="bg-white/5 rounded-xl p-4 my-6 space-y-2">
-                {Object.entries(calculateScores()).sort((a, b) => b[1] - a[1]).map(([color, score], idx) => (
-                    <div key={color} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <span className="font-mono text-gray-500">#{idx + 1}</span>
-                            <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
+                {Object.entries(calculateScores()).sort((a, b) => b[1] - a[1]).map(([color, score], idx) => {
+                    const isPlayer = color === playerColor;
+                    const playerLabel = isPlayer ? playerName : `BOT ${idx}`;
+                    return (
+                        <div key={color} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="font-mono text-gray-500">#{idx + 1}</span>
+                                <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
+                                <span className="text-sm font-bold text-white">{playerLabel}</span>
+                            </div>
+                            <span className="font-bold font-mono text-white">{score}</span>
                         </div>
-                        <span className="font-bold font-mono text-white">{score}</span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
             <button onClick={() => setGameState('menu')}
                 className="w-full py-4 bg-neon-blue text-black font-bold rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2">
