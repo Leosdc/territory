@@ -708,147 +708,146 @@ const TerritoryGame = () => {
                     ctx.font = '12px Arial';
                     ctx.fillText('YOU', cx, cy - r - 5);
                 }
-            }
             });
 
-    // Draw Particles
-    particlesRef.current.forEach(p => {
-        const px = p.x * VISUAL_CELL_SIZE;
-        const py = p.y * VISUAL_CELL_SIZE;
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(px, py, VISUAL_CELL_SIZE * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
-    });
+            // Draw Particles
+            particlesRef.current.forEach(p => {
+                const px = p.x * VISUAL_CELL_SIZE;
+                const py = p.y * VISUAL_CELL_SIZE;
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(px, py, VISUAL_CELL_SIZE * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            });
 
-    ctx.restore();
-}
+            ctx.restore();
+        }
     }, [grid, players, gameState, camera, powerUps]);
 
 
-// --- UI ---
-const calculateScores = () => {
-    const scores: { [key: string]: number } = {};
-    players.forEach(p => scores[p.color] = 0);
-    grid.forEach(row => { row.forEach(cell => { if (cell && scores[cell] !== undefined) scores[cell]++; }); });
-    return scores;
-};
+    // --- UI ---
+    const calculateScores = () => {
+        const scores: { [key: string]: number } = {};
+        players.forEach(p => scores[p.color] = 0);
+        grid.forEach(row => { row.forEach(cell => { if (cell && scores[cell] !== undefined) scores[cell]++; }); });
+        return scores;
+    };
 
-if (gameState === 'menu') {
-    return (
-        <div className="relative z-10 w-full max-w-lg bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl animate-fade-in text-center">
-            <h1 className="text-6xl font-black bg-gradient-to-r from-neon-pink to-neon-blue bg-clip-text text-transparent mb-2 drop-shadow-2xl">
-                NEON WARS
-            </h1>
-            <p className="text-gray-400 mb-8 uppercase tracking-widest font-bold">Territory Conquest</p>
+    if (gameState === 'menu') {
+        return (
+            <div className="relative z-10 w-full max-w-lg bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl animate-fade-in text-center">
+                <h1 className="text-6xl font-black bg-gradient-to-r from-neon-pink to-neon-blue bg-clip-text text-transparent mb-2 drop-shadow-2xl">
+                    NEON WARS
+                </h1>
+                <p className="text-gray-400 mb-8 uppercase tracking-widest font-bold">Territory Conquest</p>
 
-            <div className="space-y-6 text-left">
-                <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Map Size</label>
-                    <div className="grid grid-cols-3 gap-2 mt-1">
-                        {[64, 128, 256].map(s => (
-                            <button key={s} onClick={() => setGridSize(s)}
-                                className={`py-3 rounded-xl font-mono text-sm font-bold border transition-all
+                <div className="space-y-6 text-left">
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Map Size</label>
+                        <div className="grid grid-cols-3 gap-2 mt-1">
+                            {[64, 128, 256].map(s => (
+                                <button key={s} onClick={() => setGridSize(s)}
+                                    className={`py-3 rounded-xl font-mono text-sm font-bold border transition-all
                          ${gridSize === s ? 'bg-neon-purple border-neon-purple text-white' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600'}`}>
-                                {s}x{s}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Enemies</label>
-                    <div className="flex gap-2 mt-1">
-                        {[1, 2, 3].map(n => (
-                            <button key={n} onClick={() => setNumNPCs(n)}
-                                className={`flex-1 py-3 rounded-xl font-mono text-sm font-bold border transition-all
-                         ${numNPCs === n ? 'bg-neon-blue border-neon-blue text-black' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600'}`}>
-                                {n} BOTS
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Color Class</label>
-                    <div className="flex justify-between gap-2 mt-1">
-                        {COLORS.slice(0, 5).map(c => (
-                            <button key={c} onClick={() => setPlayerColor(c)}
-                                className={`w-12 h-12 rounded-full border-4 transition-transform hover:scale-110 ${playerColor === c ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-40'}`}
-                                style={{ backgroundColor: c }} />
-                        ))}
-                    </div>
-                </div>
-
-                <button onClick={initializeGame}
-                    className="w-full mt-4 py-4 bg-white text-black font-black text-xl rounded-2xl hover:bg-gray-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 shadow-xl">
-                    <Play className="fill-black" /> DEPLOY
-                </button>
-            </div>
-        </div>
-    );
-}
-
-if (gameState === 'playing') {
-    const scores = calculateScores();
-    return (
-        <div className="fixed inset-0 overflow-hidden bg-black">
-            {/* HUD */}
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-6 bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 pointer-events-none select-none">
-                <div className="flex items-center gap-2 text-2xl font-black text-white font-mono">
-                    <Timer className="text-neon-yellow" />
-                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                </div>
-                <div className="h-8 w-px bg-white/20"></div>
-                <div className="flex gap-4">
-                    {players.map((p, idx) => (
-                        <div key={idx} className="flex flex-col items-center">
-                            <div className="w-2 h-2 rounded-full mb-1" style={{ backgroundColor: p.color, boxShadow: `0 0 8px ${p.color}` }} />
-                            <span className="text-xs font-bold font-mono text-white">{scores[p.color] || 0}</span>
+                                    {s}x{s}
+                                </button>
+                            ))}
                         </div>
-                    ))}
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Enemies</label>
+                        <div className="flex gap-2 mt-1">
+                            {[1, 2, 3].map(n => (
+                                <button key={n} onClick={() => setNumNPCs(n)}
+                                    className={`flex-1 py-3 rounded-xl font-mono text-sm font-bold border transition-all
+                         ${numNPCs === n ? 'bg-neon-blue border-neon-blue text-black' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600'}`}>
+                                    {n} BOTS
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Color Class</label>
+                        <div className="flex justify-between gap-2 mt-1">
+                            {COLORS.slice(0, 5).map(c => (
+                                <button key={c} onClick={() => setPlayerColor(c)}
+                                    className={`w-12 h-12 rounded-full border-4 transition-transform hover:scale-110 ${playerColor === c ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-40'}`}
+                                    style={{ backgroundColor: c }} />
+                            ))}
+                        </div>
+                    </div>
+
+                    <button onClick={initializeGame}
+                        className="w-full mt-4 py-4 bg-white text-black font-black text-xl rounded-2xl hover:bg-gray-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 shadow-xl">
+                        <Play className="fill-black" /> DEPLOY
+                    </button>
                 </div>
             </div>
+        );
+    }
 
-            {/* Active Effects */}
-            <div className="absolute top-24 left-1/2 -translate-x-1/2 flex gap-2">
-                {players[0]?.currentSpeed > 0.15 && <div className="p-2 bg-neon-green/20 rounded-lg border border-neon-green/50 animate-pulse"><Zap size={20} className="text-neon-green" /></div>}
-                {players.some(p => !p.isPlayer && p.frozen) && <div className="p-2 bg-neon-blue/20 rounded-lg border border-neon-blue/50 animate-pulse"><Snowflake size={20} className="text-neon-blue" /></div>}
+    if (gameState === 'playing') {
+        const scores = calculateScores();
+        return (
+            <div className="fixed inset-0 overflow-hidden bg-black">
+                {/* HUD */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-6 bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 pointer-events-none select-none">
+                    <div className="flex items-center gap-2 text-2xl font-black text-white font-mono">
+                        <Timer className="text-neon-yellow" />
+                        {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div className="h-8 w-px bg-white/20"></div>
+                    <div className="flex gap-4">
+                        {players.map((p, idx) => (
+                            <div key={idx} className="flex flex-col items-center">
+                                <div className="w-2 h-2 rounded-full mb-1" style={{ backgroundColor: p.color, boxShadow: `0 0 8px ${p.color}` }} />
+                                <span className="text-xs font-bold font-mono text-white">{scores[p.color] || 0}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Active Effects */}
+                <div className="absolute top-24 left-1/2 -translate-x-1/2 flex gap-2">
+                    {players[0]?.currentSpeed > 0.15 && <div className="p-2 bg-neon-green/20 rounded-lg border border-neon-green/50 animate-pulse"><Zap size={20} className="text-neon-green" /></div>}
+                    {players.some(p => !p.isPlayer && p.frozen) && <div className="p-2 bg-neon-blue/20 rounded-lg border border-neon-blue/50 animate-pulse"><Snowflake size={20} className="text-neon-blue" /></div>}
+                </div>
+
+                <canvas ref={canvasRef} className="block" />
+
+                {/* Minimap Hint? No, too complex. Just coordinate hint? */}
+                <div className="absolute bottom-4 right-4 text-white/20 font-mono text-xs">
+                    Pos: {Math.floor(players[0]?.x)}, {Math.floor(players[0]?.y)}
+                </div>
             </div>
+        );
+    }
 
-            <canvas ref={canvasRef} className="block" />
-
-            {/* Minimap Hint? No, too complex. Just coordinate hint? */}
-            <div className="absolute bottom-4 right-4 text-white/20 font-mono text-xs">
-                Pos: {Math.floor(players[0]?.x)}, {Math.floor(players[0]?.y)}
+    return (
+        <div className="relative z-10 bg-black/90 backdrop-blur border border-white/10 p-10 rounded-3xl text-center max-w-md w-full">
+            <Crown size={64} className="mx-auto mb-6 text-neon-yellow animate-bounce" />
+            <h2 className="text-4xl font-black text-white mb-2">GAME OVER</h2>
+            <div className="bg-white/5 rounded-xl p-4 my-6 space-y-2">
+                {Object.entries(calculateScores()).sort((a, b) => b[1] - a[1]).map(([color, score], idx) => (
+                    <div key={color} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <span className="font-mono text-gray-500">#{idx + 1}</span>
+                            <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
+                        </div>
+                        <span className="font-bold font-mono text-white">{score}</span>
+                    </div>
+                ))}
             </div>
+            <button onClick={() => setGameState('menu')}
+                className="w-full py-4 bg-neon-blue text-black font-bold rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2">
+                <RefreshCw /> PLAY AGAIN
+            </button>
         </div>
     );
-}
-
-return (
-    <div className="relative z-10 bg-black/90 backdrop-blur border border-white/10 p-10 rounded-3xl text-center max-w-md w-full">
-        <Crown size={64} className="mx-auto mb-6 text-neon-yellow animate-bounce" />
-        <h2 className="text-4xl font-black text-white mb-2">GAME OVER</h2>
-        <div className="bg-white/5 rounded-xl p-4 my-6 space-y-2">
-            {Object.entries(calculateScores()).sort((a, b) => b[1] - a[1]).map(([color, score], idx) => (
-                <div key={color} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="font-mono text-gray-500">#{idx + 1}</span>
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
-                    </div>
-                    <span className="font-bold font-mono text-white">{score}</span>
-                </div>
-            ))}
-        </div>
-        <button onClick={() => setGameState('menu')}
-            className="w-full py-4 bg-neon-blue text-black font-bold rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-2">
-            <RefreshCw /> PLAY AGAIN
-        </button>
-    </div>
-);
 };
 
 export default TerritoryGame;
