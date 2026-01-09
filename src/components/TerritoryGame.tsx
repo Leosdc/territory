@@ -151,6 +151,24 @@ const TerritoryGame = () => {
         setGameState('playing');
     };
 
+    const particlesRef = useRef<Particle[]>([]);
+
+    const spawnParticles = (x: number, y: number, c1: string, c2: string) => {
+        for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 0.2 + 0.05;
+            particlesRef.current.push({
+                id: Math.random(),
+                x, y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: Math.random() > 0.5 ? c1 : c2,
+                life: 1.0,
+                maxLife: 1.0
+            });
+        }
+    };
+
     // --- POWER UP UTILS ---
     const spawnPowerUp = () => {
         // 5% chance per second called externally? Or simpler logic.
