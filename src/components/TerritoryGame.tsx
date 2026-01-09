@@ -64,7 +64,7 @@ const TerritoryGame = () => {
     const [grid, setGrid] = useState<(string | null)[][]>([]);
     const [players, setPlayers] = useState<Player[]>([]);
     const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
-    const [particles, setParticles] = useState<Particle[]>([]);
+
     const [activeEffects, setActiveEffects] = useState<string[]>([]); // For UI feedback
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -487,7 +487,6 @@ const TerritoryGame = () => {
         // Grid Updates
         setGrid(prevGrid => {
             let newGrid = prevGrid.map(row => [...row]);
-            let changed = false;
 
             players.forEach(p => {
                 if (!p.respawning) {
@@ -496,7 +495,6 @@ const TerritoryGame = () => {
                     if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
                         if (newGrid[gridY][gridX] !== p.color) {
                             newGrid[gridY][gridX] = p.color;
-                            changed = true;
                         }
                     }
                 }
@@ -557,7 +555,6 @@ const TerritoryGame = () => {
         // Camera Follow Logic
         if (players[0] && canvasRef.current) {
             const p = players[0];
-            const cvs = canvasRef.current;
 
             // Center player. 
             // Viewport is let's say window size.
