@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Crown, Timer, Trophy } from 'lucide-react';
 
 const COLORS = [
@@ -18,7 +18,7 @@ const TerritoryGame = () => {
     const [gameState, setGameState] = useState<'menu' | 'playing' | 'ended'>('menu');
     const [gridSize, setGridSize] = useState(64);
     const [numNPCs, setNumNPCs] = useState(1);
-    const [gameDuration, setGameDuration] = useState(60);
+    const [gameDuration] = useState(60);
     const [playerColor, setPlayerColor] = useState(COLORS[1]); // Default Green
     const [timeLeft, setTimeLeft] = useState(60);
 
@@ -314,7 +314,6 @@ const TerritoryGame = () => {
 
         setGrid(prevGrid => {
             let newGrid = prevGrid.map(row => [...row]);
-            let changed = false;
 
             // 1. Paint trail
             players.forEach(p => {
@@ -326,7 +325,6 @@ const TerritoryGame = () => {
                         // only paint if not already ours (optimization)
                         if (newGrid[gridY][gridX] !== p.color) {
                             newGrid[gridY][gridX] = p.color;
-                            changed = true;
                         }
                     }
                 }
@@ -353,7 +351,7 @@ const TerritoryGame = () => {
 
     useEffect(() => {
         if (gameState === 'playing') {
-            animationRef.current = setInterval(gameLoop, 1000 / 60);
+            animationRef.current = window.setInterval(gameLoop, 1000 / 60);
             return () => {
                 if (animationRef.current) clearInterval(animationRef.current);
             }
@@ -567,7 +565,6 @@ const TerritoryGame = () => {
 
     if (gameState === 'playing') {
         const scores = calculateScores();
-        const me = players[0];
 
         return (
             <div className="relative w-full h-full flex flex-col items-center justify-center overflow-hidden">
