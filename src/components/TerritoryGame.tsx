@@ -339,7 +339,7 @@ const TerritoryGame = () => {
         return newGrid;
     };
 
-    const updateNPCDirection = (npc: Player) => {
+    const updateNPCDirection = (npc: Player, currentGrid: (string | null)[][]) => {
         if (npc.frozen) return;
         if (!npc.changeDirectionTimer) npc.changeDirectionTimer = 0;
         npc.changeDirectionTimer--;
@@ -362,7 +362,7 @@ const TerritoryGame = () => {
                 npc.changeDirectionTimer = 10; // Quick re-evaluation for power-ups
             } else {
                 // Strategic movement: Try to form rectangles/enclosed areas
-                const currentCell = grid[Math.floor(npc.y)]?.[Math.floor(npc.x)];
+                const currentCell = currentGrid[Math.floor(npc.y)]?.[Math.floor(npc.x)];
                 const isOnMyTerritory = currentCell === npc.color;
 
                 // If on own territory, try to expand outward in a consistent direction
@@ -371,7 +371,7 @@ const TerritoryGame = () => {
                     if (npc.vx !== 0 || npc.vy !== 0) {
                         const nextX = Math.floor(npc.x + npc.vx);
                         const nextY = Math.floor(npc.y + npc.vy);
-                        const nextCell = grid[nextY]?.[nextX];
+                        const nextCell = currentGrid[nextY]?.[nextX];
 
                         // Keep going if next cell is empty or enemy territory
                         if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows &&
@@ -405,7 +405,7 @@ const TerritoryGame = () => {
                         const newY = Math.floor(npc.y + dir.vy * 3);
                         if (newX < 0 || newX >= cols || newY < 0 || newY >= rows) return { ...dir, score: -100 };
 
-                        const targetCell = grid[newY]?.[newX];
+                        const targetCell = currentGrid[newY]?.[newX];
                         let score = 0;
                         if (targetCell === null) score = 10; // Empty space is good
                         if (targetCell === npc.color) score = 5; // Own territory is ok
@@ -469,7 +469,7 @@ const TerritoryGame = () => {
 
             // 3. NPC AI
             newPlayers.forEach(p => {
-                if (!p.isPlayer && !p.respawning) updateNPCDirection(p);
+                if (!p.isPlayer && !p.respawning) updateNPCDirection(p, grid);
             });
 
             // 4. Movement & PowerUp Pickup
