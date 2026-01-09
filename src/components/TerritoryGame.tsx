@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Crown, Timer, Trophy, Zap, Snowflake, Bomb, RefreshCw } from 'lucide-react';
+import { Play, Crown, Timer, Zap, Snowflake, RefreshCw } from 'lucide-react';
 
 const COLORS = [
     '#FF0055', // Neon Pink
@@ -587,9 +587,9 @@ const TerritoryGame = () => {
     useEffect(() => {
         if (gameState === 'playing' && timeLeft > 0) {
             const timer = setTimeout(() => {
-                setTimeLeft(prev => prev - 1);
+                setTimeLeft(t => t - 1);
                 // Auto remove effects from UI every sec just to be safe/simple
-                setActiveEffects(prev => []);
+                setActiveEffects([]);
                 // Wait, that clears icons instantly. Ideally we track timer. 
                 // Let's just not clear, and let them be there. 
             }, 1000);
