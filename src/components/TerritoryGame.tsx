@@ -724,7 +724,6 @@ const TerritoryGame = () => {
     });
 
     ctx.restore();
-
 }
     }, [grid, players, gameState, camera, powerUps]);
 
