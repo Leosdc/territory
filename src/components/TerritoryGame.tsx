@@ -2,16 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Crown, Timer, Zap, Snowflake, RefreshCw, BookOpen, LogOut, MessageSquare } from 'lucide-react';
 
 const COLORS = [
-    '#FFB7B2', // Pastel Pink
-    '#B5EAD7', // Pastel Mint
-    '#C7CEEA', // Pastel Periwinkle
-    '#FFDAC1', // Pastel Peach
-    '#E2F0CB', // Pastel Lime
-    '#FF9AA2', // Soft Red
-    '#85E3FF', // Soft Blue
-    '#B9FBC0', // Soft Green
-    '#F7D9C4', // Soft Orange
-    '#FFFFFF'  // White
+    '#FF6B6B', // Soft Red
+    '#4ECDC4', // Soft Teal
+    '#FFE66D', // Soft Yellow
+    '#1A535C', // Deep Teal (Contrast)
+    '#FF9F1C', // Soft Orange
+    '#556270', // Slate Blue
+    '#AC6C82', // Dusty Rose
+    '#98D7C2', // Mint
+    '#F7FFF7', // Off White
+    '#2E294E'  // Dark Navy
 ];
 
 type PowerUpType = 'SWAP' | 'SPEED' | 'FREEZE' | 'BOMB';
