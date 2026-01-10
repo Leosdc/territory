@@ -1036,7 +1036,8 @@ const TerritoryGame = () => {
             );
         }
 
-        if (gameState === 'menu') {
+        // DEBUG: FORCE RENDER MENU
+        if (true || gameState === 'menu') {
             return (
                 <div className="relative z-10 w-full max-w-lg bg-black/90 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl animate-fade-in text-center max-h-[90vh] overflow-y-auto">
                     <div className="flex items-center justify-between mb-4">
