@@ -2,6 +2,22 @@
 
 All notable changes to the **Neon Territory** project will be documented in this file.
 
+## [1.1.0] - 2026-01-10
+
+### ✨ Visual & UI Updates
+- **Pastel Color Palette**: Swapped aggressive neon colors for a softer, high-contrast pastel palette for better visibility.
+- **Tutorial System**: Added a "COMO JOGAR" button to the main menu with updated instructions.
+- **Mobile Controls Hints**: Added explicit instructions for mobile touch controls.
+
+### 🎮 Gameplay Balance & Fixes
+- **Insane Mode**: 
+  - Hacker AI is now vulnerable to Freeze power-ups (hacks disabled while frozen).
+  - AI "Hacker" painting reduced slightly to avoid instant overwhelming.
+- **Painting Logic Fix**:
+  - Fixed a critical bug where painting would fail or be erased if walking over enemy territory in certain patterns.
+  - **New Rule**: Territories cannot be captured if an enemy is currently standing inside the region. This prevents "path erasing" and trapping active players in invalid fills.
+- **AI Start**: Fixed an issue where AI bots would delay/freeze at the start of the match. Bots now launch immediately.
+
 ## [1.0.0] - 2026-01-09
 
 ### 🚀 Major Features & Overhaul

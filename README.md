@@ -7,10 +7,11 @@
 
 ## 🎮 Features
 
-- **Cyberpunk Aesthetic**: Immersive dark mode with glowing neon trails and glassmorphism UI.
+- **Cyberpunk Aesthetic**: Immersive dark mode with glowing pastel trails and glassmorphism UI.
 - **Smart Capture System**: Enclose any area to capture it instantly—stealing territory from enemies or claiming empty space.
-- **Dynamic AI**: Battle against up to 3 NPC bots with randomized behaviors and unique neon colors.
-- **Responsive Controls**: Smooth movement using `WASD` or `Arrow Keys`.
+- **Dynamic AI**: Battle against up to 3 NPC bots with randomized behaviors.
+- **Modes**: challenge yourself in **Normal** or try the chaotic **Insane Mode** with hacking AIs.
+- **Responsive Controls**: Smooth movement using `WASD`, `Arrow Keys` or **Touch Controls** on mobile.
 - **Auto-Deployment**: Integrated GitHub Actions for seamless deployment to GitHub Pages.
 
 ## 🚀 Getting Started

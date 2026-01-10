@@ -2,15 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Crown, Timer, Zap, Snowflake, RefreshCw, BookOpen, LogOut, MessageSquare } from 'lucide-react';
 
 const COLORS = [
-    '#FF0055', // Neon Pink
-    '#00FF99', // Neon Green
-    '#00FFFF', // Cyan
-    '#FFCC00', // Gold
-    '#BE00FF', // Purple
-    '#FF3300', // Orange red
-    '#0066FF', // Blue
-    '#FF00CC', // Magenta
-    '#CCFF00', // Lime
+    '#FFB7B2', // Pastel Pink
+    '#B5EAD7', // Pastel Mint
+    '#C7CEEA', // Pastel Periwinkle
+    '#FFDAC1', // Pastel Peach
+    '#E2F0CB', // Pastel Lime
+    '#FF9AA2', // Soft Red
+    '#85E3FF', // Soft Blue
+    '#B9FBC0', // Soft Green
+    '#F7D9C4', // Soft Orange
     '#FFFFFF'  // White
 ];
 
@@ -292,30 +292,42 @@ const TerritoryGame = () => {
             ...player,
             x: spawnPositions[spawnIndex].x + 0.5,
             y: spawnPositions[spawnIndex].y + 0.5,
-            vx: 0,
-            vy: 0,
             respawning: true,
             respawnTimer: 120,
             currentSpeed: player.baseSpeed, // Reset speed
             speedTimer: 0,
-            frozen: false
+            frozen: false,
+            // Reset movement to random to prevent "stuck" AI on respawn
+            vx: Math.random() > 0.5 ? 1 : -1,
+            vy: Math.random() > 0.5 ? 1 : -1
         };
     };
 
-    const checkAndFillEnclosedAreas = (currentGrid: (string | null)[][], ownerColor: string) => {
+    const checkAndFillEnclosedAreas = (currentGrid: (string | null)[][], ownerColor: string, currentPlayers: Player[]) => {
         const newGrid = currentGrid.map(row => [...row]);
         const visited = Array(rows).fill(null).map(() => Array(cols).fill(false));
+
+        // Get opponent positions to prevent capturing them
+        const opponentPositions = currentPlayers
+            .filter(p => p.color !== ownerColor && !p.respawning)
+            .map(p => ({ x: Math.floor(p.x), y: Math.floor(p.y) }));
 
         // Optimized flood fill
         const floodFill = (sx: number, sy: number) => {
             const stack = [[sx, sy]];
             const region = [];
             let touchesBorder = false;
+            let containsEnemy = false;
 
             while (stack.length) {
                 const [x, y] = stack.pop()!;
                 if (x < 0 || x >= cols || y < 0 || y >= rows) { touchesBorder = true; continue; }
                 if (visited[y][x] || newGrid[y][x] === ownerColor) continue;
+
+                // Check if this cell contains an enemy
+                if (opponentPositions.some(op => op.x === x && op.y === y)) {
+                    containsEnemy = true;
+                }
 
                 visited[y][x] = true;
                 region.push([x, y]);
@@ -326,21 +338,15 @@ const TerritoryGame = () => {
                     stack.push([x + dx, y + dy]);
                 });
             }
-            return { region, touchesBorder };
+            return { region, touchesBorder, containsEnemy };
         };
-
-        // Only scan relevant areas? For giant maps scaning 256x256 every frame is BAD.
-        // OPTIMIZATION: Only scan around player?
-        // User requested giant maps. Full scan 65k cells at 60fps is questionable.
-        // Compromise: Run fill logic only every 10 frames OR only on a smaller window around player.
-        // BUT capture must be global. 
-        // Let's rely on JS speed for now, it handles 1M ops fine usually. 256*256 = 65k. Fast enough.
 
         for (let y = 0; y < rows; y++) {
             for (let x = 0; x < cols; x++) {
                 if (!visited[y][x] && newGrid[y][x] !== ownerColor) {
-                    const { region, touchesBorder } = floodFill(x, y);
-                    if (!touchesBorder && region.length > 0) {
+                    const { region, touchesBorder, containsEnemy } = floodFill(x, y);
+                    // CRITICAL FIX: Do not fill if touches border OR contains an active enemy
+                    if (!touchesBorder && !containsEnemy && region.length > 0) {
                         region.forEach(([rx, ry]) => { newGrid[ry][rx] = ownerColor; });
                     }
                 }
@@ -432,12 +438,19 @@ const TerritoryGame = () => {
                         return { ...dir, score };
                     });
 
-                    scoredOptions.sort((a, b) => b.score - a.score);
-                    const best = scoredOptions[0];
+                    // Avoid staying still if all options are bad
+                    if (scoredOptions.every(o => o.score === -100)) {
+                        // Emergency random move
+                        npc.vx = Math.random() > 0.5 ? 1 : -1;
+                        npc.vy = Math.random() > 0.5 ? 1 : -1;
+                    } else {
+                        scoredOptions.sort((a, b) => b.score - a.score);
+                        const best = scoredOptions[0];
 
-                    if (best.score > -100) {
-                        npc.vx = best.vx;
-                        npc.vy = best.vy;
+                        if (best.score > -100) {
+                            npc.vx = best.vx;
+                            npc.vy = best.vy;
+                        }
                     }
                 }
 
@@ -606,15 +619,17 @@ const TerritoryGame = () => {
             });
 
             // INSANE HACK: AI Steals Blocks
+            // INSANE HACK: AI Steals Blocks
             if (difficulty === 'insane' && Math.random() < 0.05) {
-                const botColor = players.find(p => !p.isPlayer)?.color;
-                if (botColor) {
+                const activeBots = players.filter(p => !p.isPlayer && !p.respawning && !p.frozen);
+                if (activeBots.length > 0) {
+                    const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
                     const hx = Math.floor(Math.random() * cols);
                     const hy = Math.floor(Math.random() * rows);
                     // Paint 3x3
                     for (let dy = -1; dy <= 1; dy++) {
                         for (let dx = -1; dx <= 1; dx++) {
-                            if (newGrid[hy + dy]?.[hx + dx] !== undefined) newGrid[hy + dy][hx + dx] = botColor;
+                            if (newGrid[hy + dy]?.[hx + dx] !== undefined) newGrid[hy + dy][hx + dx] = bot.color;
                         }
                     }
                 }
@@ -625,7 +640,7 @@ const TerritoryGame = () => {
                 if (!p.respawning) {
                     // Only run if player has moved enough to potentially close loop? 
                     // For simplicity, run always.
-                    newGrid = checkAndFillEnclosedAreas(newGrid, p.color);
+                    newGrid = checkAndFillEnclosedAreas(newGrid, p.color, players);
                 }
             });
 
@@ -886,14 +901,17 @@ const TerritoryGame = () => {
         return (
             <div className="relative z-10 w-full max-w-lg bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl animate-fade-in text-center">
                 <div className="absolute top-4 right-4">
-                    <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
-                        <BookOpen className="text-white" size={24} />
-                    </button>
+                    {/* Corner removed for cleanliness, moved to center */}
                 </div>
                 <h1 className="text-6xl font-black bg-gradient-to-r from-neon-pink to-neon-blue bg-clip-text text-transparent mb-2 drop-shadow-2xl">
                     NEON WARS
                 </h1>
-                <p className="text-gray-400 mb-8 uppercase tracking-widest font-bold">Territory Conquest</p>
+                <p className="text-gray-400 mb-2 uppercase tracking-widest font-bold">Territory Conquest</p>
+                <div className="flex justify-center mb-6">
+                    <button onClick={() => setShowTutorial(true)} className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 rounded-full text-xs font-bold text-gray-300 transition-all border border-white/10">
+                        <BookOpen size={14} /> COMO JOGAR
+                    </button>
+                </div>
 
                 <div className="space-y-6 text-left">
                     <div>
@@ -973,6 +991,7 @@ const TerritoryGame = () => {
                                 <li>🏰 <b>Captura:</b> Feche um quadrado para preencher tudo dentro!</li>
                                 <li>⚔️ <b>Colisão:</b> Corte o rastro do inimigo para matá-lo. Não bata de frente!</li>
                                 <li>⚡ <b>PowerUps:</b> Pegue itens para velocidade, congelar ou explodir.</li>
+                                <li>📱 <b>Mobile:</b> Toque e segure para ativar o controle virtual. Arraste para mover.</li>
                             </ul>
                             <button onClick={() => setShowTutorial(false)} className="w-full mt-6 py-3 bg-neon-blue text-black font-bold rounded-xl">ENTENDI</button>
                         </div>
