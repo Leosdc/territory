@@ -619,8 +619,7 @@ const TerritoryGame = () => {
 
                             // Chat / Kill Log
                             if (p1.isPlayer || p2.isPlayer) {
-                                const killer = p1.isPlayer ? p1 : p2; // Actually we don't know who killed who, usually both die
-                                // But let's pretend both die.
+                                // Both die, send random trash talk
                                 addMessage(TRASH_TALK.kill[Math.floor(Math.random() * TRASH_TALK.kill.length)], '#ff0000');
                             }
 
