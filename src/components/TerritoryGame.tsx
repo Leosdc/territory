@@ -73,6 +73,10 @@ const TerritoryGame = () => {
     const animationRef = useRef<number | null>(null);
     const keysPressed = useRef<{ [key: string]: boolean }>({});
 
+    // Mobile touch controls
+    const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+    const [touchCurrent, setTouchCurrent] = useState<{ x: number; y: number } | null>(null);
+
     // Dynamic Camera Viewport
     const [camera, setCamera] = useState({ x: 0, y: 0 });
 
@@ -470,10 +474,29 @@ const TerritoryGame = () => {
                 }
             });
 
-            // 2. Player Input
+            // 2. Player Input (Keyboard + Touch)
             if (newPlayers[0] && !newPlayers[0].respawning) {
                 const player = newPlayers[0];
                 player.vx = 0; player.vy = 0;
+
+                // Touch controls (mobile)
+                if (touchStart && touchCurrent) {
+                    const dx = touchCurrent.x - touchStart.x;
+                    const dy = touchCurrent.y - touchStart.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 20) { // Minimum distance to register movement
+                        const angle = Math.atan2(dy, dx);
+                        // Convert angle to 8-directional movement
+                        const dir = Math.round(angle / (Math.PI / 4));
+                        if (dir === 0 || dir === 4 || dir === -4) player.vx = 1;
+                        if (dir === 2 || dir === -2) player.vx = -1;
+                        if (dir === 1 || dir === 2) player.vy = 1;
+                        if (dir === -1 || dir === -2) player.vy = -1;
+                    }
+                }
+
+                // Keyboard controls (desktop)
                 if (keysPressed.current['ArrowUp'] || keysPressed.current['w']) player.vy = -1;
                 else if (keysPressed.current['ArrowDown'] || keysPressed.current['s']) player.vy = 1;
                 if (keysPressed.current['ArrowLeft'] || keysPressed.current['a']) player.vx = -1;
@@ -865,6 +888,20 @@ const TerritoryGame = () => {
                     </div>
 
                     <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase ml-1">Difficulty</label>
+                        <div className="flex gap-2 mt-1">
+                            <button onClick={() => setDifficulty('normal')}
+                                className={`flex-1 py-3 rounded-xl font-mono text-sm font-bold border transition-all ${difficulty === 'normal' ? 'bg-neon-green border-neon-green text-black' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600'}`}>
+                                NORMAL
+                            </button>
+                            <button onClick={() => setDifficulty('insane')}
+                                className={`flex-1 py-3 rounded-xl font-mono text-sm font-bold border transition-all ${difficulty === 'insane' ? 'bg-red-600 border-red-600 text-white animate-pulse' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600'}`}>
+                                🔥 INSANE
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
                         <label className="text-xs font-bold text-gray-500 uppercase ml-1">Color Class</label>
                         <div className="flex justify-between gap-2 mt-1">
                             {COLORS.slice(0, 5).map(c => (
@@ -911,7 +948,37 @@ const TerritoryGame = () => {
                     {players.some(p => !p.isPlayer && p.frozen) && <div className="p-2 bg-neon-blue/20 rounded-lg border border-neon-blue/50 animate-pulse"><Snowflake size={20} className="text-neon-blue" /></div>}
                 </div>
 
-                <canvas ref={canvasRef} className="block" />
+                <canvas
+                    ref={canvasRef}
+                    width={window.innerWidth}
+                    height={window.innerHeight}
+                    className="block"
+                    onTouchStart={(e) => {
+                        const touch = e.touches[0];
+                        setTouchStart({ x: touch.clientX, y: touch.clientY });
+                        setTouchCurrent({ x: touch.clientX, y: touch.clientY });
+                    }}
+                    onTouchMove={(e) => {
+                        if (touchStart) {
+                            const touch = e.touches[0];
+                            setTouchCurrent({ x: touch.clientX, y: touch.clientY });
+                        }
+                    }}
+                    onTouchEnd={() => {
+                        setTouchStart(null);
+                        setTouchCurrent(null);
+                    }}
+                />
+
+                {/* Mobile Joystick */}
+                {touchStart && touchCurrent && (
+                    <div className="absolute pointer-events-none">
+                        <div className="absolute w-32 h-32 rounded-full bg-white/10 border-4 border-white/30"
+                            style={{ left: touchStart.x - 64, top: touchStart.y - 64 }} />
+                        <div className="absolute w-16 h-16 rounded-full bg-white/50 border-4 border-white"
+                            style={{ left: touchCurrent.x - 32, top: touchCurrent.y - 32 }} />
+                    </div>
+                )}
 
                 {/* Minimap Hint? No, too complex. Just coordinate hint? */}
                 <div className="absolute bottom-4 right-4 text-white/20 font-mono text-xs">
