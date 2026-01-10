@@ -3,7 +3,7 @@
 > A high-performance, cyberpunk-themed territory capture game built with React, Vite, and Tailwind CSS.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-purple.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-purple.svg)
 
 ## 🎮 Features
 
