@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { Play, Crown, Timer, Zap, Snowflake, RefreshCw } from 'lucide-react';
 
 const COLORS = [
