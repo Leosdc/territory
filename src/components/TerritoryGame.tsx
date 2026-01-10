@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { Play, Crown, Timer, Zap, Snowflake, RefreshCw, HelpCircle } from 'lucide-react';
+import { Play, Crown, Timer, Zap, Snowflake, RefreshCw } from 'lucide-react';
 
 const COLORS = [
     '#FF0055', // Neon Pink
@@ -1044,7 +1043,7 @@ const TerritoryGame = () => {
                         <Crown size={48} className="mx-auto text-neon-yellow animate-pulse md:w-16 md:h-16" />
                         <button onClick={() => setShowTutorial(true)}
                             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all flex-1 flex justify-end">
-                            <HelpCircle size={24} className="text-white" />
+                            <span className="text-white font-bold text-xl">?</span>
                         </button>
                     </div>
 
