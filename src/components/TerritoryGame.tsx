@@ -950,8 +950,6 @@ const TerritoryGame = () => {
 
                 <canvas
                     ref={canvasRef}
-                    width={window.innerWidth}
-                    height={window.innerHeight}
                     className="block"
                     onTouchStart={(e) => {
                         const touch = e.touches[0];
