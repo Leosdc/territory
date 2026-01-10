@@ -686,6 +686,20 @@ const TerritoryGame = () => {
         };
     }, []);
 
+    // Canvas Resize Handler
+    useEffect(() => {
+        const handleResize = () => {
+            if (canvasRef.current) {
+                canvasRef.current.width = window.innerWidth;
+                canvasRef.current.height = window.innerHeight;
+            }
+        };
+
+        handleResize(); // Set initial size
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Timer
     useEffect(() => {
         if (gameState === 'playing' && timeLeft > 0) {
