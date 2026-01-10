@@ -57,6 +57,7 @@ const TerritoryGame = () => {
     const [gameState, setGameState] = useState<'menu' | 'playing' | 'ended'>('menu');
     const [gridSize, setGridSize] = useState(32);
     const [numNPCs, setNumNPCs] = useState(1);
+    const [difficulty, setDifficulty] = useState<'normal' | 'insane'>('normal');
     const [gameDuration] = useState(60);
     const [playerColor, setPlayerColor] = useState(COLORS[1]);
     const [playerName] = useState('YOU');
@@ -116,13 +117,16 @@ const TerritoryGame = () => {
             const posIndex = (i + 1) % spawnPositions.length;
             const color = shuffled[i % shuffled.length];
 
+            // Insane mode: NPCs are MUCH faster and more aggressive
+            const npcSpeed = difficulty === 'insane' ? 0.18 : 0.12;
+
             newPlayers.push({
                 x: spawnPositions[posIndex].x,
                 y: spawnPositions[posIndex].y,
                 color: color,
                 isPlayer: false,
-                baseSpeed: 0.12,
-                currentSpeed: 0.12,
+                baseSpeed: npcSpeed,
+                currentSpeed: npcSpeed,
                 vx: 0,
                 vy: 0,
                 changeDirectionTimer: 0,
@@ -345,8 +349,9 @@ const TerritoryGame = () => {
         npc.changeDirectionTimer--;
 
         if (npc.changeDirectionTimer <= 0) {
-            // Smart AI: Seek nearest power-up (70% chance)
-            if (powerUps.length > 0 && Math.random() > 0.3) {
+            // INSANE MODE: NPCs are OBSESSED with power-ups (95% chance vs 70%)
+            const powerUpChance = difficulty === 'insane' ? 0.95 : 0.3;
+            if (powerUps.length > 0 && Math.random() > (1 - powerUpChance)) {
                 const nearest = powerUps.reduce((closest, pu) => {
                     const dist = Math.sqrt((npc.x - pu.x) ** 2 + (npc.y - pu.y) ** 2);
                     const closestDist = Math.sqrt((npc.x - closest.x) ** 2 + (npc.y - closest.y) ** 2);
@@ -359,7 +364,7 @@ const TerritoryGame = () => {
 
                 npc.vx = dx > 0.5 ? 1 : dx < -0.5 ? -1 : 0;
                 npc.vy = dy > 0.5 ? 1 : dy < -0.5 ? -1 : 0;
-                npc.changeDirectionTimer = 10; // Quick re-evaluation for power-ups
+                npc.changeDirectionTimer = difficulty === 'insane' ? 5 : 10; // INSANE: Re-evaluate VERY quickly
             } else {
                 // Strategic movement: Try to form rectangles/enclosed areas
                 const currentCell = currentGrid[Math.floor(npc.y)]?.[Math.floor(npc.x)];
@@ -377,7 +382,8 @@ const TerritoryGame = () => {
                         if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows &&
                             (nextCell === null || nextCell !== npc.color)) {
                             // Continue in same direction
-                            npc.changeDirectionTimer = 30 + Math.random() * 20; // Longer straight lines
+                            const lineLength = difficulty === 'insane' ? 40 : 30; // INSANE: Longer lines
+                            npc.changeDirectionTimer = lineLength + Math.random() * 10;
                             return;
                         }
                     }
@@ -401,15 +407,21 @@ const TerritoryGame = () => {
 
                     // Prefer directions that lead to empty space or back to own territory
                     const scoredOptions = options.map(dir => {
-                        const newX = Math.floor(npc.x + dir.vx * 3);
-                        const newY = Math.floor(npc.y + dir.vy * 3);
+                        const lookAhead = difficulty === 'insane' ? 5 : 3; // INSANE: Look further ahead
+                        const newX = Math.floor(npc.x + dir.vx * lookAhead);
+                        const newY = Math.floor(npc.y + dir.vy * lookAhead);
                         if (newX < 0 || newX >= cols || newY < 0 || newY >= rows) return { ...dir, score: -100 };
 
                         const targetCell = currentGrid[newY]?.[newX];
                         let score = 0;
                         if (targetCell === null) score = 10; // Empty space is good
                         if (targetCell === npc.color) score = 5; // Own territory is ok
-                        if (targetCell && targetCell !== npc.color) score = -5; // Enemy territory is bad
+                        // INSANE MODE: AGGRESSIVELY target enemy territory
+                        if (difficulty === 'insane') {
+                            if (targetCell && targetCell !== npc.color) score = 15; // ATTACK!
+                        } else {
+                            if (targetCell && targetCell !== npc.color) score = -5; // Enemy territory is bad
+                        }
 
                         return { ...dir, score };
                     });
@@ -423,7 +435,8 @@ const TerritoryGame = () => {
                     }
                 }
 
-                npc.changeDirectionTimer = 25 + Math.random() * 25;
+                const timerRange = difficulty === 'insane' ? 15 : 25; // INSANE: Change direction more often
+                npc.changeDirectionTimer = timerRange + Math.random() * timerRange;
             }
         }
     };
