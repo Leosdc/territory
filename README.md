@@ -1,70 +1,45 @@
-# 🌆 Neon Territory
+# NEON WARS 🕹️
 
-> A high-performance, cyberpunk-themed territory capture game built with React, Vite, and Tailwind CSS.
+> Um jogo de conquista de território rápido e frenético em estilo Cyberpunk.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-purple.svg)
+## 🇧🇷 Sobre o Jogo
+**Neon Wars** é um jogo de estratégia em grid onde seu objetivo é pintar o máximo de células possível com a sua cor. Você compete contra bots inteligentes (ou insanos) em uma arena neon vibrante. Use Power-Ups para ganhar vantagem e cuidado com as bombas!
 
-## 🎮 Features
+## ✨ Funcionalidades
+- **Jogabilidade Rápida:** Partidas intensas de 60 segundos.
+- **Power-Ups:** 
+    - ⚡ **Speed:** Super velocidade por 5 segundos.
+    - ❄️ **Freeze:** Congela todos os inimigos.
+    - ⇄ **Swap:** Troca de lugar/território com um oponente.
+    - 💥 **Bomb:** Explode uma área ao seu redor.
+- **Modo Insano:** Bots trapaceiros que usam hacks (teleporte, velocidade) e chat provocativo.
+- **Controles Mobile:** Joystick virtual intuitivo.
+- **Visual Cyberpunk:** Efeitos de neon, partículas e interface imersiva.
 
-- **Cyberpunk Aesthetic**: Immersive dark mode with glowing neon trails and glassmorphism UI.
-- **Smart Capture System**: Enclose any area to capture it instantly—stealing territory from enemies or claiming empty space.
-- **Dynamic AI**: Battle against up to 3 NPC bots with randomized behaviors and unique neon colors.
-- **Responsive Controls**: Smooth movement using `WASD` or `Arrow Keys`.
-- **Auto-Deployment**: Integrated GitHub Actions for seamless deployment to GitHub Pages.
+## 🎮 Como Jogar
+1. **Mover:** 
+   - **PC:** Use as setas `Direcionais` ou `WASD`.
+   - **Mobile:** Toque e arraste na tela para mover.
+2. **Objetivo:** Ande pelo mapa para pintar o chão.
+3. **Vencer:** Quem tiver mais território quando o tempo acabar, vence!
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/territory-game.git
-   cd territory-game
-   ```
-
-2. **Install dependencies**
+## 🚀 Instalação e Execução
+1. Certifique-se de ter o Node.js instalado.
+2. Clone o repositório.
+3. Instale as dependências:
    ```bash
    npm install
    ```
-
-3. **Run development server**
+4. Rode o servidor de desenvolvimento:
    ```bash
    npm run dev
    ```
 
-4. **Build for production**
-   ```bash
-   npm run build
-   ```
+## 🛠 Tecnologias
+- React + TypeScript
+- Tailwind CSS
+- Lucide React (Ícones)
+- HTML5 Canvas
 
-## 🕹️ How to Play
-
-1. **Start**: Choose your neon color, grid size, and number of opponents in the main menu.
-2. **Move**: Use your keyboard to navigate the grid.
-3. **Paint**: Your movement leaves a trail.
-4. **Capture**: Return to your own existing territory to "close the loop". **Everything** inside that loop becomes yours!
-5. **Win**: The player with the most tiles when the timer hits zero wins the crown.
-
-## 🛠️ Tech Stack
-
-- **Core**: React 18, TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS, PostCSS
-- **Icons**: Lucide React
-
-## 📦 Deployment
-
-This project is configured for **zero-config deployment** to GitHub Pages.
-
-1. Push this code to a GitHub repository.
-2. Watch the **Actions** tab.
-3. The included workflow will build and deploy your game automatically.
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+---
+*Criado por [Seu Nome/GitHub]*
