@@ -1238,7 +1238,13 @@ const TerritoryGame = () => {
 
     }
 
-    return null; // Fallback for other states like 'paused' (TODO: UI for pause)
+    return (
+        <div className="text-white text-center p-10 font-mono">
+            <h1 className="text-2xl text-red-500">DEBUG MODE</h1>
+            <p>GameState: {gameState}</p>
+            <p>ShowTutorial: {String(showTutorial)}</p>
+        </div>
+    );
 };
 
 export default TerritoryGame;
