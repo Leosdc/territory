@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Crown, Timer, Zap, Snowflake, RefreshCw } from 'lucide-react';
+import { Play, Crown, Timer, Zap, Snowflake, RefreshCw, HelpCircle } from 'lucide-react';
 
 const COLORS = [
     '#FF0055', // Neon Pink
@@ -74,6 +74,18 @@ const TerritoryGame = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationRef = useRef<number | null>(null);
     const keysPressed = useRef<{ [key: string]: boolean }>({});
+
+    // --- CHAT & CHEAT CONSTANTS ---
+    const TRASH_TALK = {
+        kill: ["EZ!", "Sit down!", "Deleted.", "Lag?", "Too slow!", "Git gud", "Bye bye!"],
+        win: ["I own this grid!", "Call me King.", "Look at the scoreboard.", "Too easy."],
+        powerup: ["UNLIMITED POWER!", "Mine!", "Yoink!", "Thanks for the boost!"]
+    };
+
+    const addMessage = (text: string, color: string = '#fff') => {
+        setMessages(prev => [...prev.slice(-4), { id: Date.now(), text, color }]);
+        setTimeout(() => setMessages(prev => prev.slice(1)), 4000);
+    };
 
     // Mobile touch controls
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
@@ -915,6 +927,116 @@ const TerritoryGame = () => {
             return scores;
         };
 
+        // Tutorial Modal
+        if (showTutorial) {
+            return (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-3xl font-black text-white">📖 COMO JOGAR</h2>
+                            <button onClick={() => setShowTutorial(false)}
+                                className="p-2 rounded-full hover:bg-white/10 transition-all">
+                                <Crown size={24} className="text-white" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6 text-left">
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-yellow mb-2">🎯 Objetivo</h3>
+                                <p className="text-gray-300">Conquiste o máximo de território possível! Pinte células do mapa com sua cor movendo-se pelo grid. Quem tiver mais território ao final do tempo vence!</p>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-blue mb-2">🎮 Controles</h3>
+                                <p className="text-gray-300 mb-2"><strong>Desktop:</strong> Use WASD ou setas do teclado para mover</p>
+                                <p className="text-gray-300"><strong>Mobile:</strong> Toque e arraste na tela para criar um joystick virtual</p>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-purple mb-2">⚡ Power-Ups</h3>
+                                <div className="space-y-2 text-gray-300">
+                                    <p>• <strong>⇄ SWAP:</strong> Troca posição com um inimigo aleatório</p>
+                                    <p>• <strong>⚡ SPEED:</strong> Dobra sua velocidade temporariamente</p>
+                                    <p>• <strong>❄ FREEZE:</strong> Congela todos os inimigos por alguns segundos</p>
+                                    <p>• <strong>💥 BOMB:</strong> Destrói território inimigo ao redor</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-green mb-2">💡 Dicas</h3>
+                                <div className="space-y-1 text-gray-300">
+                                    <p>• Pinte constantemente para expandir seu território</p>
+                                    <p>• Busque power-ups para vantagem estratégica</p>
+                                    <p>• No modo INSANE, os bots são muito mais agressivos!</p>
+                                    <p>• Mapas menores = partidas mais rápidas e intensas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onClick={() => setShowTutorial(false)}
+                            className="w-full mt-6 py-3 bg-neon-yellow text-black font-bold rounded-xl hover:bg-white transition-all">
+                            ENTENDI! VAMOS JOGAR 🚀
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Tutorial Modal
+        if (showTutorial) {
+            return (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in-up">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-3xl font-black text-white">📖 COMO JOGAR</h2>
+                            <button onClick={() => setShowTutorial(false)}
+                                className="p-2 rounded-full hover:bg-white/10 transition-all">
+                                <Crown size={24} className="text-white" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-6 text-left">
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-yellow mb-2">🎯 Objetivo</h3>
+                                <p className="text-gray-300">Conquiste o máximo de território possível! Pinte células do mapa com sua cor movendo-se pelo grid. Quem tiver mais território ao final do tempo vence!</p>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-blue mb-2">🎮 Controles</h3>
+                                <p className="text-gray-300 mb-2"><strong>Desktop:</strong> Use WASD ou setas do teclado para mover</p>
+                                <p className="text-gray-300"><strong>Mobile:</strong> Toque e arraste na tela para criar um joystick virtual</p>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-purple mb-2">⚡ Power-Ups</h3>
+                                <div className="space-y-2 text-gray-300">
+                                    <p>• <strong>⇄ SWAP:</strong> Troca posição com um inimigo aleatório</p>
+                                    <p>• <strong>⚡ SPEED:</strong> Dobra sua velocidade temporariamente</p>
+                                    <p>• <strong>❄ FREEZE:</strong> Congela todos os inimigos por alguns segundos</p>
+                                    <p>• <strong>💥 BOMB:</strong> Destrói território inimigo ao redor</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-xl font-bold text-neon-green mb-2">💡 Dicas</h3>
+                                <div className="space-y-1 text-gray-300">
+                                    <p>• Pinte constantemente para expandir seu território</p>
+                                    <p>• Busque power-ups para vantagem estratégica</p>
+                                    <p>• No modo INSANE, os bots são muito mais agressivos!</p>
+                                    <p>• Mapas menores = partidas mais rápidas e intensas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onClick={() => setShowTutorial(false)}
+                            className="w-full mt-6 py-3 bg-neon-yellow text-black font-bold rounded-xl hover:bg-white transition-all">
+                            ENTENDI! VAMOS JOGAR 🚀
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
         if (gameState === 'menu') {
             return (
                 <div className="relative z-10 w-full max-w-lg bg-black/90 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl animate-fade-in text-center max-h-[90vh] overflow-y-auto">
@@ -1115,60 +1237,9 @@ const TerritoryGame = () => {
             </div>
         );
 
-        // Tutorial Modal
-        if (showTutorial) {
-            return (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-900 border border-white/20 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-3xl font-black text-white">📖 COMO JOGAR</h2>
-                            <button onClick={() => setShowTutorial(false)}
-                                className="p-2 rounded-full hover:bg-white/10 transition-all">
-                                <Crown size={24} className="text-white" />
-                            </button>
-                        </div>
+    }
 
-                        <div className="space-y-6 text-left">
-                            <div>
-                                <h3 className="text-xl font-bold text-neon-yellow mb-2">🎯 Objetivo</h3>
-                                <p className="text-gray-300">Conquiste o máximo de território possível! Pinte células do mapa com sua cor movendo-se pelo grid. Quem tiver mais território ao final do tempo vence!</p>
-                            </div>
+    return null; // Fallback for other states like 'paused' (TODO: UI for pause)
+};
 
-                            <div>
-                                <h3 className="text-xl font-bold text-neon-blue mb-2">🎮 Controles</h3>
-                                <p className="text-gray-300 mb-2"><strong>Desktop:</strong> Use WASD ou setas do teclado para mover</p>
-                                <p className="text-gray-300"><strong>Mobile:</strong> Toque e arraste na tela para criar um joystick virtual</p>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xl font-bold text-neon-purple mb-2">⚡ Power-Ups</h3>
-                                <div className="space-y-2 text-gray-300">
-                                    <p>• <strong>⇄ SWAP:</strong> Troca posição com um inimigo aleatório</p>
-                                    <p>• <strong>⚡ SPEED:</strong> Dobra sua velocidade temporariamente</p>
-                                    <p>• <strong>❄ FREEZE:</strong> Congela todos os inimigos por alguns segundos</p>
-                                    <p>• <strong>💥 BOMB:</strong> Destrói território inimigo ao redor</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xl font-bold text-neon-green mb-2">💡 Dicas</h3>
-                                <div className="space-y-1 text-gray-300">
-                                    <p>• Pinte constantemente para expandir seu território</p>
-                                    <p>• Busque power-ups para vantagem estratégica</p>
-                                    <p>• No modo INSANE, os bots são muito mais agressivos!</p>
-                                    <p>• Mapas menores = partidas mais rápidas e intensas</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button onClick={() => setShowTutorial(false)}
-                            className="w-full mt-6 py-3 bg-neon-yellow text-black font-bold rounded-xl hover:bg-white transition-all">
-                            ENTENDI! VAMOS JOGAR 🚀
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-    };
-
-    export default TerritoryGame;
+export default TerritoryGame;
