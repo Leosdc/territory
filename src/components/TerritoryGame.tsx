@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Crown, Timer, Zap, Snowflake, RefreshCw } from 'lucide-react';
+import { Play, Crown, Timer, Zap, Snowflake, RefreshCw, BookOpen, LogOut, MessageSquare } from 'lucide-react';
 
 const COLORS = [
     '#FF0055', // Neon Pink
@@ -68,6 +68,8 @@ const TerritoryGame = () => {
     const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
 
     const [activeEffects, setActiveEffects] = useState<string[]>([]); // For UI feedback
+    const [showTutorial, setShowTutorial] = useState(false);
+    const [chatMessages, setChatMessages] = useState<{ id: number; text: string; color: string }[]>([]);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationRef = useRef<number | null>(null);
@@ -603,6 +605,21 @@ const TerritoryGame = () => {
                 }
             });
 
+            // INSANE HACK: AI Steals Blocks
+            if (difficulty === 'insane' && Math.random() < 0.05) {
+                const botColor = players.find(p => !p.isPlayer)?.color;
+                if (botColor) {
+                    const hx = Math.floor(Math.random() * cols);
+                    const hy = Math.floor(Math.random() * rows);
+                    // Paint 3x3
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            if (newGrid[hy + dy]?.[hx + dx] !== undefined) newGrid[hy + dy][hx + dx] = botColor;
+                        }
+                    }
+                }
+            }
+
             // Enclosure Check (Global) - Expensive but necessary for mechanics
             players.forEach(p => {
                 if (!p.respawning) {
@@ -691,10 +708,32 @@ const TerritoryGame = () => {
         if (gameState === 'playing' && timeLeft > 0) {
             const timer = setTimeout(() => {
                 setTimeLeft(t => t - 1);
-                // Auto remove effects from UI every sec just to be safe/simple
                 setActiveEffects([]);
-                // Wait, that clears icons instantly. Ideally we track timer. 
-                // Let's just not clear, and let them be there. 
+
+                // Chat Logic (Insane / Normal)
+                if (Math.random() < 0.2) {
+                    const scores = calculateScores();
+                    const myScore = scores[playerColor] || 0;
+                    const botEntries = Object.entries(scores).filter(([c]) => c !== playerColor);
+                    if (botEntries.length > 0) {
+                        const topBot = botEntries.sort((a, b) => b[1] - a[1])[0];
+                        let msg = "";
+
+                        // Taunts
+                        if (topBot[1] > myScore) {
+                            const taunts = ["Tô ganhando!", "Muito lento!", "Olha o mapa!", "Já era!"];
+                            msg = taunts[Math.floor(Math.random() * taunts.length)];
+                        } else if (difficulty === 'insane') {
+                            const hacks = ["Ativando hacks...", "Roubando pixels...", "Calculando rota..."];
+                            msg = hacks[Math.floor(Math.random() * hacks.length)];
+                        }
+
+                        if (msg) {
+                            setChatMessages(prev => [...prev.slice(-4), { id: Date.now(), text: msg, color: topBot[0] }]);
+                        }
+                    }
+                }
+
             }, 1000);
             return () => clearTimeout(timer);
         } else if (timeLeft <= 0 && gameState === 'playing') {
@@ -846,6 +885,11 @@ const TerritoryGame = () => {
     if (gameState === 'menu') {
         return (
             <div className="relative z-10 w-full max-w-lg bg-black/80 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl animate-fade-in text-center">
+                <div className="absolute top-4 right-4">
+                    <button onClick={() => setShowTutorial(true)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                        <BookOpen className="text-white" size={24} />
+                    </button>
+                </div>
                 <h1 className="text-6xl font-black bg-gradient-to-r from-neon-pink to-neon-blue bg-clip-text text-transparent mb-2 drop-shadow-2xl">
                     NEON WARS
                 </h1>
@@ -917,6 +961,23 @@ const TerritoryGame = () => {
                         <Play className="fill-black" /> DEPLOY
                     </button>
                 </div>
+
+                {showTutorial && (
+                    <div className="absolute inset-0 z-50 bg-black/90 flex items-center justify-center p-6">
+                        <div className="bg-gray-900 border border-white/20 p-8 rounded-3xl max-w-md w-full text-left relative">
+                            <button onClick={() => setShowTutorial(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><LogOut size={24} /></button>
+                            <h2 className="text-2xl font-black text-white mb-4 flex items-center gap-2"><BookOpen /> COMO JOGAR</h2>
+                            <ul className="space-y-3 text-gray-300">
+                                <li>🎮 <b>Mover:</b> Use setas, WASD ou toque na tela.</li>
+                                <li>✨ <b>Território:</b> Ande para pintar o chão.</li>
+                                <li>🏰 <b>Captura:</b> Feche um quadrado para preencher tudo dentro!</li>
+                                <li>⚔️ <b>Colisão:</b> Corte o rastro do inimigo para matá-lo. Não bata de frente!</li>
+                                <li>⚡ <b>PowerUps:</b> Pegue itens para velocidade, congelar ou explodir.</li>
+                            </ul>
+                            <button onClick={() => setShowTutorial(false)} className="w-full mt-6 py-3 bg-neon-blue text-black font-bold rounded-xl">ENTENDI</button>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -931,6 +992,9 @@ const TerritoryGame = () => {
                         <Timer className="text-neon-yellow" />
                         {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                     </div>
+                    <button onClick={() => setGameState('menu')} className="ml-4 p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full pointer-events-auto">
+                        <LogOut size={20} className="text-white" />
+                    </button>
                     <div className="h-8 w-px bg-white/20"></div>
                     <div className="flex gap-4">
                         {players.map((p, idx) => (
@@ -940,6 +1004,16 @@ const TerritoryGame = () => {
                             </div>
                         ))}
                     </div>
+                </div>
+
+                {/* Chat Notifications */}
+                <div className="absolute top-24 right-4 flex flex-col items-end gap-2 pointer-events-none">
+                    {chatMessages.map(msg => (
+                        <div key={msg.id} className="animate-slide-in bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl rounded-tr-none text-white font-bold text-sm flex items-center gap-2">
+                            <MessageSquare size={14} style={{ color: msg.color }} />
+                            <span style={{ color: msg.color }}>AI:</span> {msg.text}
+                        </div>
+                    ))}
                 </div>
 
                 {/* Active Effects */}
